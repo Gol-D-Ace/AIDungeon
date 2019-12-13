@@ -105,20 +105,24 @@ class Story:
         return json.dumps(story_dict)
 
     def save_to_local(self, save_name):
-        self.uuid = str(uuid.uuid1())
+        #self.uuid = str(uuid.uuid1())
         story_json = self.to_json()
-        file_name = "AIDungeonSave_" + save_name + ".json"
+        file_name = "saves/" + save_name + ".json"
         f = open(file_name, "w")
         f.write(story_json)
         f.close()
+        return self.uuid
 
     def load_from_local(self, save_name):
-        file_name = "AIDungeonSave_" + save_name + ".json"
-        print("Save ID that can be used to load game is: ", self.uuid)
-
-        with open(file_name, "r") as fp:
-            game = json.load(fp)
-        self.init_from_dict(game)
+        file_name = "saves/" + save_name + ".json"
+        console_print("trying to load " + file_name)
+        if os.path.isfile(file_name):
+            with open(file_name, "r") as fp:
+                game = json.load(fp)
+            self.init_from_dict(game)
+            return str(self)
+        else:
+            return "Error: save not found."
 
     def save_to_storage(self):
         self.uuid = str(uuid.uuid1())
@@ -168,10 +172,13 @@ class StoryManager:
         self.story = None
 
     def start_new_story(
-        self, story_prompt, context="", game_state=None, upload_story=False
+        self, story_prompt, context="", game_state=None, upload_story=False, noblock=False
     ):
-        block = self.generator.generate(context + story_prompt)
-        block = cut_trailing_sentence(block)
+        if noblock:
+            block = ""
+        else:
+            block = self.generator.generate(context + story_prompt)
+            block = cut_trailing_sentence(block)
         self.story = Story(
             context + story_prompt + block,
             context=context,
@@ -179,6 +186,18 @@ class StoryManager:
             upload_story=upload_story,
         )
         return self.story
+        
+    def load_new_story_from_local(self, save_name):
+        file_name = "saves/" + save_name + ".json"
+        console_print("trying to load " + file_name)
+        if os.path.isfile(file_name):
+            with open(file_name, "r") as fp:
+                game = json.load(fp)
+            self.story = Story("")
+            self.story.init_from_dict(game)
+            return str(self.story)
+        else:
+            return "Error: save not found."
 
     def load_new_story(self, story_id):
         file_name = "story" + story_id + ".json"
