@@ -2,6 +2,6 @@
 
 source .env
 
-aria2c -V -d"${MODELS_DIRECTORY}" "${MODELS_DIRECTORY}/${MODEL_TORRENT_BASENAME%.*}" > /dev/null &
+aria2c -V -d"${MODELS_DIRECTORY}" "${MODELS_DIRECTORY}/${MODEL_TORRENT_BASENAME%.*}" &
 
 python play.py
